@@ -20,11 +20,19 @@
 class Arm_class
 {
   public:
-    pthread_mutex_t count_mutex;
+    ros::ServiceClient client_gripper;
+    ros::Subscriber sub_goal_pos;
 
-    geometry_msgs::PointStamped pointstamped_local;
-    //geometry_msgs::Quaternion orientation;
-    Arm_class();
-    //~Arm_class();
+    pthread_mutex_t count_mutex;
+   
+    geometry_msgs::PointStamped pointstamped_local;//the recieved data
+    geometry_msgs::PoseStamped goal_pose;//the goal position
+   
+
+    play_motion_msgs::PlayMotionGoal goal;
+
+    Arm_class(ros::NodeHandle nh);
     void getPose(const geometry_msgs::PointStampedConstPtr &pose);//CREATE A CALLBACK FUNCTION FOR THE TOPIC  position
+    void gotoTarget(double delta_x,double delta_y, double delta_z);
+    void home();
 };
