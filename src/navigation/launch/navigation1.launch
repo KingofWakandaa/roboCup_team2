@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  
+
+  <node pkg="navigation" name="navigation1" type="navigation1" output="screen"/>
+  <!--node pkg="navigation" name="navigation2" type="navigation2" output="screen"/-->
+  <!--node pkg="navigation" name="" type="" /-->
+  <!--node pkg="navigation" name="" type="" /--> 
+  <!--node pkg="navigation" name="" type="" /-->
+  <!--node pkg="navigation" name="" type="" /-->
+
+</launch>

@@ -1,0 +1,16 @@
+<launch>
+    <node pkg="plane_segmentation" type="segment_node" name="segment_node" output="screen">
+    <!--/node-->
+    <!--node pkg="rviz" type="rviz" name="rviz" args="-d $(find plane_segmentation)/config/seg.rviz"-->
+    </node>
+
+    <node pkg="from2dto3d" type="node_2Dto3D" name="node_2Dto3D" output="screen">
+    </node>
+    <!--
+    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 /world /map 100">
+	<param name="/use_sime_time" value="false"/>	
+    </node>
+    -->
+    <node pkg="object_recognition" type="node_objectRecognition" name="node_objectRecognition" output="screen">
+    </node>
+</launch>
