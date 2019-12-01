@@ -3,13 +3,11 @@
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "takethings");
-  
+
   ros::NodeHandle nh;
   ros::AsyncSpinner spinner(1);
   spinner.start();
-  //****************** Definition **************//
   Arm_class Arm_tiago;
-  
   ros::ServiceClient client_gripper=nh.serviceClient<std_srvs::Empty>("/gripper_controller/grasp");
   ros::Subscriber sub_goal_pos = nh.subscribe("segmentation/Point3D",100,
                                                &Arm_class::getPose,
@@ -19,47 +17,37 @@ int main(int argc, char** argv)
   //the distance between table and tiago must be more than MIN_DIST_TIAGO_TABEL
   const double SAFE_DIST = 0.3; //the place of bottle to the edge of the table should be less than SAFE_DIST
   const double GRIPPER_LEN = 0.15; //the length of the tiago gripper
-
-
-  //****************** Arm motion ***************//
+  //****************** motion begins ***************//
   //////////////////////////////////////////////////////////////
   //////////move to a near position with same y and z///////////
   //////////////////////////////////////////////////////////////
   ros::WallDuration(1.0).sleep();
+  ROS_INFO_STREAM("Arm_tiago x : " << Arm_tiago.pointstamped_local.point.x);//check wether the callback is called
+  ROS_INFO_STREAM("Arm_tiago y : " << Arm_tiago.pointstamped_local.point.y);//check wether the callback is called
+  ROS_INFO_STREAM("Arm_tiago z : " << Arm_tiago.pointstamped_local.point.z);//check wether the callback is called
   goal_pose.header.stamp = Arm_tiago.pointstamped_local.header.stamp;
   goal_pose.header.frame_id = Arm_tiago.pointstamped_local.header.frame_id;
-  ROS_INFO("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-  ROS_INFO_STREAM(goal_pose.header.frame_id);
-  ROS_INFO("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-
   goal_pose.pose.position.x = Arm_tiago.pointstamped_local.point.x - SAFE_DIST;
   goal_pose.pose.position.y = Arm_tiago.pointstamped_local.point.y;
   goal_pose.pose.position.z = Arm_tiago.pointstamped_local.point.z;
   goal_pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(1.57, 0, 0);
-  ROS_INFO_STREAM("Get Point x : " << goal_pose.pose.position.x);
-  ROS_INFO_STREAM("Get Point y : " << goal_pose.pose.position.y);
-  ROS_INFO_STREAM("Get Point z : " << goal_pose.pose.position.z);
-  ROS_INFO_STREAM("Get Point x : " << Arm_tiago.pointstamped_local.point.x);
-  ROS_INFO_STREAM("Get Point y : " << Arm_tiago.pointstamped_local.point.y);
-  ROS_INFO_STREAM("Get Point z : " << Arm_tiago.pointstamped_local.point.z);
-
+  ROS_INFO_STREAM("the frame is:"<<goal_pose.header.frame_id);
+  ROS_INFO_STREAM("first Point x : " << goal_pose.pose.position.x);
+  ROS_INFO_STREAM("first Point y : " << goal_pose.pose.position.y);
+  ROS_INFO_STREAM("first Point z : " << goal_pose.pose.position.z);
   //select group of joints
   moveit::planning_interface::MoveGroupInterface group_arm_torso("arm_torso");
-  //choose your preferred planner
-  group_arm_torso.setPlannerId("SBLkConfigDefault");
+  group_arm_torso.setPlannerId("SBLkConfigDefault");//choose the planner
   group_arm_torso.setPoseReferenceFrame("base_footprint");
-  group_arm_torso.setPoseTarget(goal_pose);
-
+  group_arm_torso.setPoseTarget(goal_pose);//give the position
+  group_arm_torso.setStartStateToCurrentState();
+  group_arm_torso.setMaxVelocityScalingFactor(0.3);
+  group_arm_torso.setPlanningTime(10.0);//set maximum time to find a plan
   ROS_INFO_STREAM("Planning to move " <<
                   group_arm_torso.getEndEffectorLink() << " to a target pose expressed in " <<
                   group_arm_torso.getPlanningFrame());
-
-  group_arm_torso.setStartStateToCurrentState();
-  group_arm_torso.setMaxVelocityScalingFactor(0.3);
-
-
+  //set the plan
   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-  group_arm_torso.setPlanningTime(10.0);//set maximum time to find a plan
   bool success = bool(group_arm_torso.plan(my_plan));
   if ( !success )
     throw std::runtime_error("No plan found");
@@ -70,21 +58,18 @@ int main(int argc, char** argv)
   ROS_INFO_STREAM("Motion duration: " << (ros::Time::now() - start).toSec());
   ros::WallDuration(2.0).sleep();
   //////////////////////////////////////////////////////////////
-  //////////move to bottle position with same y and z///////////
+  /////////////move to the target position//////////////////////
   //////////////////////////////////////////////////////////////
   goal_pose.pose.position.x = Arm_tiago.pointstamped_local.point.x - GRIPPER_LEN;
-  goal_pose.pose.position.y = Arm_tiago.pointstamped_local.point.y;
-  goal_pose.pose.position.z = Arm_tiago.pointstamped_local.point.z - 0.05;
-  ROS_INFO_STREAM("Get Point2 x : " << goal_pose.pose.position.x);
-  ROS_INFO_STREAM("Get Point2 y : " << goal_pose.pose.position.y);
-  ROS_INFO_STREAM("Get Point2 z : " << goal_pose.pose.position.z);
-  ROS_INFO_STREAM("Get Point2 x : " << Arm_tiago.pointstamped_local.point.x);
-  ROS_INFO_STREAM("Get Point2 y : " << Arm_tiago.pointstamped_local.point.y);
-  ROS_INFO_STREAM("Get Point2 z : " << Arm_tiago.pointstamped_local.point.z);
+  //goal_pose.pose.position.y = Arm_tiago.pointstamped_local.point.y;
+  goal_pose.pose.position.z = Arm_tiago.pointstamped_local.point.z - 0.05;//???
+  ROS_INFO_STREAM("Target Point x : " << goal_pose.pose.position.x);
+  ROS_INFO_STREAM("Target Point y : " << goal_pose.pose.position.y);
+  ROS_INFO_STREAM("Target Point z : " << goal_pose.pose.position.z);
   group_arm_torso.setPoseTarget(goal_pose);
-  //plan
+  //set a plan
   moveit::planning_interface::MoveGroupInterface::Plan my_plan2;
-  group_arm_torso.setPlanningTime(5.0);//set maximum time to find a plan
+  //group_arm_torso.setPlanningTime(5.0);//set maximum time to find a plan
   success = bool(group_arm_torso.plan(my_plan2));
   if ( !success )
     throw std::runtime_error("No plan found");
@@ -95,9 +80,9 @@ int main(int argc, char** argv)
   ROS_INFO_STREAM("Motion duration: " << (ros::Time::now() - start).toSec());
   // Wait a bit for ROS things to initialize
   ros::WallDuration(2.0).sleep();
-  //*********************** Arm motion ********************//
-
-  //*********************** Graps ***********************//
+  //////////////////////////////////////////////////////////////
+  ///////////////////////////// grasp  /////////////////////////
+  //////////////////////////////////////////////////////////////
   if(client_gripper.call(empty_msg))
   {
       //PLOT THE MESSAGE
@@ -107,27 +92,20 @@ int main(int argc, char** argv)
   {
       ROS_ERROR_STREAM("Failed to call the service '/gripper_controller/grasp'");
   }
-  //*********************** Graps ***********************//
-
-  //*********************** Homing ***********************//
+  //////////////////////////////////////////////////////////////
+  ////////////////////////  homing     /////////////////////////
+  //////////////////////////////////////////////////////////////
   actionlib::SimpleActionClient<play_motion_msgs::PlayMotionAction> client("/play_motion", true);
-
   ROS_INFO("Waiting for Action Server ...");
   client.waitForServer();
-
   play_motion_msgs::PlayMotionGoal goal;
-
   goal.motion_name = "home";
   goal.skip_planning = false;
   goal.priority = 0;
-
   client.sendGoal(goal);
-
   ROS_INFO("Waiting for result ...");
   bool actionOk = client.waitForResult(ros::Duration(30.0));
-
   actionlib::SimpleClientGoalState state = client.getState();
-
   if ( actionOk )
   {
       ROS_INFO_STREAM("Action finished successfully with state: " << state.toString());
@@ -136,7 +114,7 @@ int main(int argc, char** argv)
   {
       ROS_ERROR_STREAM("Action failed with state: " << state.toString());
   }
-  //*********************** Homing ***********************//
+  //*********************** motion end ***********************//
   spinner.stop();
   return EXIT_SUCCESS;
 }
