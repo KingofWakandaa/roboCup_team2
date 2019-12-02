@@ -10,6 +10,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <actionlib/client/simple_action_client.h>
 #include <play_motion_msgs/PlayMotionAction.h>
+#include <trajectory_msgs/JointTrajectory.h>
 
 
 // Std C++ headers
@@ -26,13 +27,9 @@ class Arm_class
     pthread_mutex_t count_mutex;
    
     geometry_msgs::PointStamped pointstamped_local;//the recieved data
-    geometry_msgs::PoseStamped goal_pose;//the goal position
-   
-
-    play_motion_msgs::PlayMotionGoal goal;
-
+  
     Arm_class(ros::NodeHandle nh);
     void getPose(const geometry_msgs::PointStampedConstPtr &pose);//CREATE A CALLBACK FUNCTION FOR THE TOPIC  position
-    void gotoTarget(double delta_x,double delta_y, double delta_z);
-    void home();
+    static void gotoTarget(geometry_msgs::PointStamped pose, double delta_x,double delta_y, double delta_z);
+    static void home();
 };

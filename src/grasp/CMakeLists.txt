@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   actionlib
   play_motion_msgs
+  trajectory_msgs
 )
 
 catkin_package(
@@ -36,7 +37,16 @@ target_link_libraries(takethings
 # target_link_libraries(plan_arm_torso_ik
 #    ${catkin_LIBRARIES}
 #  )
+add_executable(placethings src/placethings.cpp src/Arm_class.cpp)
+add_dependencies(placethings ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(placethings
+   ${catkin_LIBRARIES}
+ )
 
+
+install(TARGETS placethings
+     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
 install(TARGETS takethings
      RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
